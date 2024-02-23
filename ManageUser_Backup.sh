@@ -20,6 +20,7 @@ echo "B: Delete the user "
 echo "C: List of all user "
 echo "D: Add the group "
 echo "E: archieve the directory "
+echo "F :Reset  password"
 }
 
 #adduser function 
