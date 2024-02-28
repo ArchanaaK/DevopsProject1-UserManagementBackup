@@ -12,15 +12,16 @@ fi
 
 
 # Select an option 
-usage(){ 
-echo "Below are the options : "
-echo 
-echo "A: Add the user "
-echo "B: Delete the user "
-echo "C: List of all user "
-echo "D: Add the group "
-echo "E: archieve the directory "
-echo "F :Reset  password"
+function display_usage {
+	echo "Usage: $0 [OPTIONS]"
+	echo "options:"
+	echo "  -c, --create  Create a new user account."
+	echo "  -d, --delete  Delete an exisiting user account."
+	echo "  -r, --reset   Reset password for an existing user account."
+	echo "  -l, --list    List all user accounts on the system."
+	echo "  -h, --help    Display this help and exit."
+    echo "  -g, --group   Add to group."
+    echo "  -b, --backup  create backup."
 }
 
 #adduser function 
@@ -43,6 +44,7 @@ adduser(){
       #Set the Password 
      echo "$USER_NAME:$PASSWORD" | chpasswd
    fi
+   
   # Display the USERNAME/Password 
    echo
    echo "USERNAME created : $USER_NAME"
@@ -73,7 +75,6 @@ listofuser(){
 #Add the Group
 
 addthegroup(){
-
 	read -p "Please enter the group you want to add " GROUP_NAME
 	groupadd $GROUP_NAME
         echo "Group added successfully "
@@ -81,32 +82,57 @@ addthegroup(){
         echo $GROUPADDED
 }
 
+#function to reset the password for an existing user account
+resetpassword() {
+	read -p "Enter the username to reset password: " username
+	#check if the username exists
+	if id "$username" &>/dev/null; then
+		#prompt for password (Note: you might want to use 'read -s' to hide the password input)
+		read -p "Enter the new password for $username: " password
+		#set the new password
+		echo "$username:$password" | chpasswd
+		echo "password for user '$username' reset Successfully."
+	else
+		echo "Error: The username '$username' does not exists. please enter a valid username."
+	fi
+}
+
 # Backup function 
 
 backup(){
-  
   base_path=/home/ubuntu	
   read -p "Please enter the directory you want to take backup " backup_dir 
   tar czf $base_path/$(date +%y-%m-%d-%H%M%S)$backup_dir.tar.gz $backup_dir  
   mv $base_path/*.tar.gz $base_path/backup
-
 }
 
 # Calling the usage function 
 usage 
-
-read -p "Please choose an option :" choice 
-
-case $choice in 
-	a) adduser ;;
-	b) deleteuser ;;
-	c) listofuser ;;
-	d) addthegroup ;;
-	e) backup ;;
-	*) echo " Usage : ${0} WRONG OPTION "
-		 usage
-	         exit ;;	
-		
-esac
-
-
+#command-line argument parsing
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-c| --create)
+		    adduser
+			;;
+		-d| --delete)
+			deleteuser
+			;;
+		-r| --reset)
+			resetpassword
+			;;
+		-l| --list)
+			listofusers
+			;;
+  		-g| --group)
+			addtogroup
+			;;
+		-b| --backup)
+			backup
+			;;
+		*)
+			echo "Error: Invalid option "$1". Use "--help" to see available options."
+			exit 1
+			;;
+		esac
+		shift
+done
